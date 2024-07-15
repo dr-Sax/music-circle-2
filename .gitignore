@@ -1,0 +1,11 @@
+.venv
+venv
+.DS_Store
+**/*.jpg
+**/*.png
+**/*.avi
+**/*.mp4
+**/*.wav
+**/*.m4a
+**/*.icloud
+Model
