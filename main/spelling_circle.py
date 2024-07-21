@@ -112,7 +112,8 @@ class Test(Base):
             width = scale * TRIGGER_CIRCLE_RAD * math.sqrt(2),
             height = scale * TRIGGER_CIRCLE_RAD * math.sqrt(2)
         )
-        grid = Texture(f'alphabet/{ALPHABET_BLOCKS[idx]}.png')
+        #grid = Texture(f'alphabet/{ALPHABET_BLOCKS[idx]}.png')
+        grid = Texture(f'alphabet/bubbles.mp4', self.time)
         grid_material = TextureMaterial(grid)
         mesh = Mesh(square_geo, grid_material) 
         mesh.translate(x = x, y = y, z = z)
@@ -152,7 +153,6 @@ class Test(Base):
 
     # frame updater
     def update(self):
-
         # make sounds only while a circle is triggered
         if len(self.input.keyPressedList) > 0:
             for key in self.input.keyDownList:

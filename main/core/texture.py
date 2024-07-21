@@ -28,11 +28,10 @@ class Texture(object):
 
     # load image from file
     def loadImage(self, fileName):
-        if fileName[-4:] == '.png':
+        try:
             self.surface = pygame.image.load(fileName)
-        else:
-            shape = fileName.shape[1::-1]
-            self.surface = pygame.image.frombuffer(fileName.tobytes(), shape, "BGR")
+        except:
+            self.surface = fileName
     
     # set property values
     def setProperties(self, props):
