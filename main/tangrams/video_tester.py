@@ -53,7 +53,7 @@ class Test(Base):
         self.camera = Camera(aspectRatio = WIDTH / HEIGHT)
         self.camera.setPosition([X, 0, Z]) 
         self.renderer.render(self.scene, self.camera) 
-        self.clip = VideoFileClip(f'alphabet/bubbles.mp4')
+        self.clip = VideoFileClip(f'../alphabet/bubbles.mp4')
 
         mpk_name = mido.get_input_names()
         print(mpk_name)

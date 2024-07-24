@@ -12,12 +12,11 @@ class PolygonGeometry(Geometry):
         n2 = theta2 / (2 * pi) * sides
         positionData = []
         colorData = []
-        
         uvData = []
         uvCenter = [0.5, 0.5]
 
         for n in np.arange(n1, n2 + 1):
-            #positionData.append([0, 0, 0])
+            positionData.append([0, 0, 0])
             positionData.append([radius * cos(n * A) + x, radius * sin(n * A) + y, 0])
             positionData.append([radius * cos((n + 1) * A) + x, radius * sin((n + 1) * A) + y, 0])
             colorData.append([1, 1, 1])
@@ -29,13 +28,13 @@ class PolygonGeometry(Geometry):
             uvData.append(
                 [
                     cos(n * A) * 0.5 + 0.5,
-                    sin(n * A) * 0.5 + 0.5,
+                    sin(n * A) * 0.5 + 0.5
                 ]
             )
             uvData.append(
                 [
                     cos((n + 1) * A) * 0.5 + 0.5,
-                    sin((n + 1) * A) * 0.5 + 0.5,
+                    sin((n + 1) * A) * 0.5 + 0.5
                 ]
             )
         
