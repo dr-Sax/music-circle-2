@@ -51,6 +51,8 @@ class GraphicsWindow(Base):
         self.camera.setPosition([X, 0, Z]) 
         self.renderer.render(self.scene, self.camera) 
         self.clip = VideoFileClip(f'alphabet/bubbles.mp4')
+        self.house_coords = self.get_house_coordinates(X0, Y0, 10, 0)
+        self.raven_coords = self.get_raven_coordinates(X0, Y0, 10, 0)
         self.phi = 0
         self.pause_iter = 0
 
@@ -89,52 +91,51 @@ class GraphicsWindow(Base):
         mesh.rotateZ(phi)
         return mesh
     
-    def draw_house(self, b1, grid_material, phi):
+    def get_house_coordinates(self, X0, Y0, scale, rotation):
+
+        # [base_length, phi, x, y]
+        tangram_coords = {'ta1': (), 'ta2': (), 'tb': (), 'tc1': (), 'tc2': (), 's': (), 'p': ()}
+
+        # Dimensions of each shape:
+        b1 = scale
         s1 = b1 / TRIANGLE_WH_P
-        h1 = self.get_height(b1, s1)
-        x1 = X0 + h1 / (2 * np.sqrt(2))
-        y1 = Y0
-        theta = 3 * np.pi / 4 + phi
-
-        TA1_mesh = self.get_triangle_mesh(self.time, b1, theta, x1 + 10*np.sin(self.phi/100*2*np.pi), y1 + 10*np.sin(self.phi/100*2*np.pi), grid_material)
-        x2 = X0 - h1 / (2 * np.sqrt(2))
-        y2 = Y0
-        theta = 5 * np.pi / 4 + phi
-        TA2_mesh = self.get_triangle_mesh(self.time, b1, theta, x2, y2, grid_material)
-
         b2 = s1
         s2 = s1 / TRIANGLE_WH_P
+        h2 = self.get_height(b2, s2)
         s3 = s2 / TRIANGLE_WH_P
-        y3 = Y0 - h1 / (2 * np.sqrt(2)) - s3 / 2
-        x3 = X0 + h1 / (2 * np.sqrt(2))
-        theta = 0 + phi
-        TB_mesh = self.get_triangle_mesh(self.time, b2, theta, x3, y3, grid_material)
-
-        xS = X0 - s3
-        yS = Y0 - h1 / (2 * np.sqrt(2)) - s3 / 2
-        theta = 0 + phi
-        S_mesh = self.get_square_mesh(self.time, s3, theta, xS, yS, grid_material)
-
+        h1 = self.get_height(b1, s1)
         b3 = s2
         h3 = self.get_height(b3, s3)
-        x4 = xS + s3 / 2 + h3 / (2 * np.sqrt(2))
-        y4 = Y0 - h1 / (2 * np.sqrt(2)) - h3 / (2 * np.sqrt(2))
-        theta = np.pi / 4 + phi
-        TC1_mesh = self.get_triangle_mesh(self.time, b3, theta, x4, y4, grid_material)
 
-        x5 = x3 + s3 - h3 / (2 * np.sqrt(2))
-        y5 = y4
-        theta = -np.pi / 4 + phi
-        TC2_mesh = self.get_triangle_mesh(self.time, b3, theta, x5, y5, grid_material)
+        ta1x = X0 + h1 / (2 * np.sqrt(2))
+        ta1y = Y0
+        tangram_coords['ta1'] = (b1, 3 * np.pi / 4 + rotation, ta1x, ta1y)
 
-        x6 = x1 + h1 / (2 * np.sqrt(2))
-        y6 = y1 + h1 / (2 * np.sqrt(2)) + b3 / 2
-        theta = np.pi / 2 + phi
-        P_mesh = self.get_parallelogram_mesh(self.time, b3, h3, theta, x6, y6, grid_material)
+        sx = X0 - s3
+        sy = Y0 - h1 / (2 * np.sqrt(2)) - s3 / 2
+        tangram_coords['s'] = (s3, 0 + rotation, sx, sy)
 
-        mesh_list = [TA1_mesh, TA2_mesh, S_mesh, TB_mesh, TC1_mesh, TC2_mesh, P_mesh]
+        tc1x = sx + s3 / 2 + h3 / (2 * np.sqrt(2))
+        tc1y = Y0 - h1 / (2 * np.sqrt(2)) - h3 / (2 * np.sqrt(2))
+        tangram_coords['tc1'] = (b3, np.pi / 4 + rotation, tc1x, tc1y)
 
-        return mesh_list
+        ta2x = X0 - h1 / (2 * np.sqrt(2))
+        ta2y = Y0
+        tangram_coords['ta2'] = (b1, 5 * np.pi / 4 + rotation, ta2x, ta2y)
+
+        tbx = X0 + h1 / (2 * np.sqrt(2))
+        tby = Y0 - h1 / (2 * np.sqrt(2)) - s3 / 2
+        tangram_coords['tb'] = (b2, 0 + rotation, tbx, tby)
+        
+        tc2x = tbx + s3 - h3 / (2 * np.sqrt(2))
+        tc2y = tc1y
+        tangram_coords['tc2'] = (b3, -np.pi / 4 + rotation, tc2x, tc2y)
+        
+        px = ta1x + h1 / (2 * np.sqrt(2))
+        py = ta1y + h1 / (2 * np.sqrt(2)) + b3 / 2
+        tangram_coords['p'] = (b3, h3, np.pi / 2 + rotation, px, py)
+
+        return tangram_coords
     
     def get_raven_coordinates(self, X0, Y0, scale, rotation):
 
@@ -182,6 +183,29 @@ class GraphicsWindow(Base):
 
         return tangram_coords
     
+    def get_transition_coords(self, coord1, coord2, cur_time, period):
+        transition_coords = {'ta1': (), 'ta2': (), 'tb': (), 'tc1': (), 'tc2': (), 's': (), 'p': ()}
+        for key in transition_coords.keys():
+            if key == 'p':
+                b1, h1, r1, x1, y1 = coord1[key]
+                b2, h2, r2, x2, y2 = coord2[key]
+            else:
+                b1, r1, x1, y1 = coord1[key]
+                b2, r2, x2, y2 = coord2[key]
+            
+            rt = r1 + (r2 - r1) * cur_time / period
+            xt = x1 + (x2 - x1) * cur_time / period
+            yt = y1 + (y2 - y1) * cur_time / period
+            bt = b1 + (b2 - b1) * cur_time / period
+
+            if key == 'p':
+                ht = h1 + (h2 - h1) * cur_time / period
+                transition_coords[key] = (bt, ht, rt, xt, yt)
+            else:
+                transition_coords[key] = (bt, rt, xt, yt)
+            
+        return transition_coords
+
     def get_tangram_mesh(self, tangram_coords, grid_material):
         ta1_mesh = self.get_triangle_mesh(tangram_coords['ta1'], grid_material)
         s_mesh = self.get_square_mesh(tangram_coords['s'], grid_material)
@@ -195,14 +219,11 @@ class GraphicsWindow(Base):
 
         return mesh_list
 
-
     # frame updater
     def update(self):
         frame_surface = self.get_cur_video_frame(self.time)
         grid = Texture(frame_surface)
         grid_material = TextureMaterial(grid)
-
-        b1 = 4 * np.sin(self.time)  + 12
 
         if self.phi == 100:
             if self.pause_iter == 20:
@@ -213,9 +234,14 @@ class GraphicsWindow(Base):
         else:
             self.phi += 1
 
-        #mesh_list = self.draw_house(b1, grid_material, self.phi / 100 * 2*np.pi)
-        raven_coords = self.get_raven_coordinates(X0, Y0 + self.time, 10, 0)
-        mesh_list = self.get_tangram_mesh(raven_coords, grid_material)
+        t_coords = self.get_transition_coords(
+                                            self.house_coords,
+                                            self.raven_coords,
+                                            self.phi,
+                                            100
+                                            )
+        
+        mesh_list = self.get_tangram_mesh(t_coords, grid_material)
 
         for mesh in mesh_list:
             self.scene.add(mesh)
