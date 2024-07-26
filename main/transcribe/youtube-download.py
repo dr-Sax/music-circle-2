@@ -11,7 +11,7 @@ def yt_vid_downloader(st, et, name, link, fmt):
             'download_ranges': download_range_func(None, [(start_time, end_time)]),
             'force_keyframes_at_cuts': True,
             'format': 'best[ext=mp4]',
-            'outtmpl': f'C:/Users/nicor/OneDrive/Documents/Code/Music-Circle/main/media/{name}.{fmt}'
+            'outtmpl': f'C:/Users/nicor/OneDrive/Documents/Code/music-circle-2/main/media/{name}.{fmt}'
         }
 
     if fmt == 'wav':
@@ -24,18 +24,18 @@ def yt_vid_downloader(st, et, name, link, fmt):
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'wav',
             }],
-            'outtmpl': f'C:/Users/nicor/OneDrive/Documents/Code/Music-Circle/main/media/{name}'
+            'outtmpl': f'C:/Users/nicor/OneDrive/Documents/Code/music-circle-2/main/media/{name}'
         }
 
 
     with yt_dlp.YoutubeDL(yt_opts) as ydl:
         ydl.download(link)
 
-ST = [1, 0]
-ET = [2, 0]
-NAME = 'twinkle'
-LINK = 'https://www.youtube.com/watch?v=OZuA3bDwGrs'
-FMT = 'wav'
+ST = [0, 0]
+ET = [0, 9]
+NAME = 'eyes'
+LINK = 'https://www.youtube.com/watch?v=-01-XBHXFq8'
+FMT = 'mp4'
 
 
 yt_vid_downloader(ST, ET, NAME, LINK, FMT)    
