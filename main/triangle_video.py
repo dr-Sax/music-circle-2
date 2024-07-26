@@ -132,6 +132,55 @@ class GraphicsWindow(Base):
         mesh_list = [TA1_mesh, TA2_mesh, S_mesh, TB_mesh, TC1_mesh, TC2_mesh, P_mesh]
 
         return mesh_list
+    
+    def draw_raven(self, b1, grid_material, phi):
+        s1 = b1 / TRIANGLE_WH_P
+        b2 = s1
+        s2 = s1 / TRIANGLE_WH_P
+        h2 = self.get_height(b2, s2)
+        s3 = s2 / TRIANGLE_WH_P
+        h1 = self.get_height(b1, s1)
+        b3 = s2
+        h3 = self.get_height(b3, s3)
+
+        ta1x = X0
+        ta1y = Y0
+        theta = 0
+        TA1_mesh = self.get_triangle_mesh(self.time, b1, theta, ta1x, ta1y, grid_material)
+
+        sx = ta1x + b3
+        sy = ta1y
+        theta = np.pi / 4
+        S_mesh = self.get_square_mesh(self.time, s3, theta, sx, sy, grid_material)
+
+        tc1x = ta1x + b3 / 2
+        tc1y = ta1y - h1 / 2 - h3 / 2
+        theta = np.pi
+        TC1_mesh = self.get_triangle_mesh(self.time, b3, theta, tc1x, tc1y, grid_material)
+
+        ta2x = tc1x + b1 / 2
+        ta2y = sy - h1 / 2
+        theta = 0
+        TA2_mesh = self.get_triangle_mesh(self.time, b1, theta, ta2x, ta2y, grid_material)
+
+        tc2x = tc1x + b3 / 2
+        tc2y = tc1y - h3
+        theta = np.pi
+        TC2_mesh = self.get_triangle_mesh(self.time, b3, theta, tc2x, tc2y, grid_material)
+
+        tbx = tc1x
+        tby = tc1y - h3 / 2 - h2 / 2
+        theta = 0
+        TB_mesh = self.get_triangle_mesh(self.time, b2, theta, tbx, tby, grid_material)
+
+        px = ta2x + s3
+        py = ta2y - h1 / 2 - s3 / 2
+        theta = 3 * np.pi / 2 + np.pi / 4
+        P_mesh = self.get_parallelogram_mesh(self.time, b3, h3, theta, px, py, grid_material)
+
+        mesh_list = [TA1_mesh, TA2_mesh, S_mesh, TC1_mesh, TC2_mesh, TB_mesh, P_mesh]
+
+        return mesh_list
 
 
     # frame updater
@@ -151,7 +200,9 @@ class GraphicsWindow(Base):
         else:
             self.phi += 1
 
-        mesh_list = self.draw_house(b1, grid_material, self.phi / 100 * 2*np.pi)
+        #mesh_list = self.draw_house(b1, grid_material, self.phi / 100 * 2*np.pi)
+        mesh_list = self.draw_raven(b1, grid_material, 0)
+
         for mesh in mesh_list:
             self.scene.add(mesh)
 
