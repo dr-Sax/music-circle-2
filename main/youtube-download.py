@@ -31,10 +31,10 @@ def yt_vid_downloader(st, et, name, link, fmt):
     with yt_dlp.YoutubeDL(yt_opts) as ydl:
         ydl.download(link)
 
-ST = [0, 0]
-ET = [0, 9]
-NAME = 'eyes'
-LINK = 'https://www.youtube.com/watch?v=-01-XBHXFq8'
+ST = [1, 40]
+ET = [2, 8]
+NAME = 'nosferatu'
+LINK = 'https://www.youtube.com/watch?v=9ZmyxccQQWI'
 FMT = 'mp4'
 
 

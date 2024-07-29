@@ -31,33 +31,56 @@ import numpy as np
 ################################################
 # Constants                                    #
 ################################################
-WIDTH = 2560 / 2
-HEIGHT = 1400 / 2
-Z = 20  # Sets camera distance away from xy plane  Zoom
+WIDTH = 1400 / 2
+HEIGHT = 2560 / 2
+Z = 40  # Sets camera distance away from xy plane  Zoom
 X = 10  # MIDDLE
 
 # Tangram Proportions
-TRIANGLE_WH_P = 8.5 / 6
-Y0 = -2
-X0 = X
+TRIANGLE_WH_P = 8.5 / 12
+Y0 = 2
+X0 = 5
 
 # render a basic scene
 class GraphicsWindow(Base):
     def initialize(self):
-        # View SetupS
+        # View Setups
         self.renderer = Renderer()
         self.scene = Scene()
         self.camera = Camera(aspectRatio = WIDTH / HEIGHT)
         self.camera.setPosition([X, 0, Z]) 
         self.renderer.render(self.scene, self.camera) 
-        self.clip = VideoFileClip(f'alphabet/bubbles.mp4')
-        self.house_coords = self.get_house_coordinates(X0, Y0, 10, 0)
-        self.raven_coords = self.get_raven_coordinates(X0, Y0, 10, 0)
+        self.clips = [VideoFileClip(f'media/cartoon_house.mp4'), 
+                      VideoFileClip(f'media/eyes.mp4'), 
+                      VideoFileClip(f'media/fire.mp4'), 
+                      VideoFileClip(f'media/frog.mp4'),
+                      VideoFileClip(f'media/shark.mp4'),
+                      VideoFileClip(f'media/nosferatu.mp4')
+                      ]
+        self.house_coords = self.get_house_coordinates(X0, Y0, 15, 0)
+        self.raven_coords = self.get_raven_coordinates(X0, Y0, 15, 0)
+        
+        # animation controls
         self.phi = 0
         self.pause_iter = 0
+        self.direction = -1
+        self.pause_period = 30
+        self.scramble_period = 100
+        self.iter = 0
+        self.texture_list = []
+        self.random_ints = []
 
-    def get_cur_video_frame(self, current_time):
-        current_frame = self.clip.get_frame(t = current_time)
+    def screen_recorder(self, file_name):
+        screen = pygame.display.get_surface()
+        size = screen.get_size()
+        buffer = glReadPixels(0, 0, *size, GL_RGBA, GL_UNSIGNED_BYTE)
+        screen_surf = pygame.image.fromstring(buffer, size, "RGBA")
+        screen_surf = pygame.transform.flip(screen_surf, True, True)
+        pygame.image.save(screen_surf, f"media/raven_house/{file_name}.jpg")
+
+    def get_cur_video_frame(self, current_time, clip):
+        
+        current_frame = clip.get_frame(t = current_time)
         frame_surface = pygame.surfarray.make_surface(current_frame.swapaxes(0, 1))
         return frame_surface
     
@@ -192,56 +215,78 @@ class GraphicsWindow(Base):
             else:
                 b1, r1, x1, y1 = coord1[key]
                 b2, r2, x2, y2 = coord2[key]
-            
-            rt = r1 + (r2 - r1) * cur_time / period
-            xt = x1 + (x2 - x1) * cur_time / period
-            yt = y1 + (y2 - y1) * cur_time / period
-            bt = b1 + (b2 - b1) * cur_time / period
+
+            if cur_time != period:
+                t = (cur_time % period) / period
+            else:
+                t = cur_time / period
+
+            rt = r1 + (r2 - r1) * t
+            xt = x1 + (x2 - x1) * t
+            yt = y1 + (y2 - y1) * t
+            bt = b1 + (b2 - b1) * t
 
             if key == 'p':
-                ht = h1 + (h2 - h1) * cur_time / period
+                ht = h1 + (h2 - h1) * t
                 transition_coords[key] = (bt, ht, rt, xt, yt)
             else:
                 transition_coords[key] = (bt, rt, xt, yt)
             
         return transition_coords
 
-    def get_tangram_mesh(self, tangram_coords, grid_material):
-        ta1_mesh = self.get_triangle_mesh(tangram_coords['ta1'], grid_material)
-        s_mesh = self.get_square_mesh(tangram_coords['s'], grid_material)
-        tc1_mesh = self.get_triangle_mesh(tangram_coords['tc1'], grid_material)
-        ta2_mesh = self.get_triangle_mesh(tangram_coords['ta2'], grid_material)
-        tc2_mesh = self.get_triangle_mesh(tangram_coords['tc2'], grid_material)
-        tb_mesh = self.get_triangle_mesh(tangram_coords['tb'], grid_material)
-        p_mesh = self.get_parallelogram_mesh(tangram_coords['p'], grid_material)
+    def get_tangram_mesh(self, tangram_coords):
+        
+        
+        self.texture_list = []
+        for vid in self.clips:
+            
+            frame_surface = self.get_cur_video_frame(self.time % vid.duration, vid)
+            grid = Texture(frame_surface)
+            grid_material = TextureMaterial(grid)
+            self.texture_list.append(grid_material)
 
+        if self.phi in [0, 100] and self.pause_iter in [0, 1]:
+            self.random_ints = []
+            for i in range(0, 7):
+                self.random_ints.append(random.randint(0, len(self.clips) - 1))
+
+        ta1_mesh = self.get_triangle_mesh(tangram_coords['ta1'], self.texture_list[self.random_ints[0]])
+        ta2_mesh = self.get_triangle_mesh(tangram_coords['ta2'], self.texture_list[self.random_ints[1]])
+        tb_mesh = self.get_triangle_mesh(tangram_coords['tb'], self.texture_list[self.random_ints[2]])
+        tc1_mesh = self.get_triangle_mesh(tangram_coords['tc1'], self.texture_list[self.random_ints[3]])
+        tc2_mesh = self.get_triangle_mesh(tangram_coords['tc2'], self.texture_list[self.random_ints[4]])
+        s_mesh = self.get_square_mesh(tangram_coords['s'], self.texture_list[self.random_ints[5]])
+        p_mesh = self.get_parallelogram_mesh(tangram_coords['p'], self.texture_list[self.random_ints[6]])    
+       
         mesh_list = [ta1_mesh, ta2_mesh, s_mesh, tc1_mesh, tc2_mesh, tb_mesh, p_mesh]
 
         return mesh_list
 
     # frame updater
     def update(self):
-        frame_surface = self.get_cur_video_frame(self.time)
-        grid = Texture(frame_surface)
-        grid_material = TextureMaterial(grid)
-
-        if self.phi == 100:
-            if self.pause_iter == 20:
-                self.phi = 0
+        
+        self.camera.setPosition([X, 0 , Z + 10 * np.sin(self.phi / self.scramble_period * np.pi)]) 
+        
+        if self.phi == 0 or self.phi == self.scramble_period:
+            if self.pause_iter == self.pause_period:
                 self.pause_iter = 0
+                self.direction = self.direction * -1
+                self.phi += self.direction
+
             else:
                 self.pause_iter += 1
+
         else:
-            self.phi += 1
+            self.phi += self.direction
 
         t_coords = self.get_transition_coords(
                                             self.house_coords,
                                             self.raven_coords,
                                             self.phi,
-                                            100
+                                            self.scramble_period
                                             )
         
-        mesh_list = self.get_tangram_mesh(t_coords, grid_material)
+        mesh_list = self.get_tangram_mesh(t_coords)
 
         for mesh in mesh_list:
             self.scene.add(mesh)
@@ -250,6 +295,9 @@ class GraphicsWindow(Base):
 
         for mesh in mesh_list:
             self.scene.remove(mesh)
+        
+        self.screen_recorder(file_name = self.iter)
+        self.iter += 1
 
 
 if __name__ == '__main__':
