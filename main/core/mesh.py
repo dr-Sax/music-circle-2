@@ -20,3 +20,6 @@ class Mesh(Object3D):
 
         # unbind this vertex array object
         glBindVertexArray(0)
+    
+    def set_material(self, material):
+        self.material = material

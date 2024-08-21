@@ -37,7 +37,7 @@ HEIGHT = 1400 / 2
 Z = 20  # Sets camera distance away from xy plane  Zoom
 X = 10
 TRIGGER_CIRCLE_CNT = 8
-TRIGGER_CIRCLE_RAD = 3
+TRIGGER_CIRCLE_RAD = 2
 
 PERIM_RAD_A = 8
 PERIM_RAD_B = 8
@@ -80,9 +80,10 @@ class Test(Base):
             pab = self.perimeter_alphabet_block_generator(i, x, y) 
             cwa = self.combined_word_arrangement_generator(i)
 
-            self.scene.add(pc)
-            self.scene.add(pab)   
-            self.scene.add(cwa)       
+            
+            self.scene.add(pab)  
+            self.scene.add(pc) 
+            #self.scene.add(cwa)       
             
             self.renderer.render(self.scene, self.camera) 
 
@@ -112,8 +113,8 @@ class Test(Base):
             width = scale * TRIGGER_CIRCLE_RAD * math.sqrt(2),
             height = scale * TRIGGER_CIRCLE_RAD * math.sqrt(2)
         )
-        #grid = Texture(f'alphabet/{ALPHABET_BLOCKS[idx]}.png')
-        grid = Texture(f'alphabet/bubbles.mp4', self.time)
+        grid = Texture(f'alphabet/{ALPHABET_BLOCKS[idx]}.png')
+        #grid = Texture(f'alphabet/bubbles.mp4', self.time)
         grid_material = TextureMaterial(grid)
         mesh = Mesh(square_geo, grid_material) 
         mesh.translate(x = x, y = y, z = z)
@@ -137,7 +138,7 @@ class Test(Base):
 
         # Create Geometry and Material
         trigger_circle_geometry = PolygonGeometry(
-            sides = 100, 
+            sides = 5, 
             radius = TRIGGER_CIRCLE_RAD,
             x = x,
             y = y
@@ -154,39 +155,39 @@ class Test(Base):
     # frame updater
     def update(self):
         # make sounds only while a circle is triggered
-        if len(self.input.keyPressedList) > 0:
-            for key in self.input.keyDownList:
-                try:
-                    angle_index = MUSIC_CIRCLE_NOTES.index(key)
-                    self.sound_generator(angle_idx = angle_index)
+        # if len(self.input.keyPressedList) > 0:
+        #     for key in self.input.keyDownList:
+        #         try:
+        #             angle_index = MUSIC_CIRCLE_NOTES.index(key)
+        #             self.sound_generator(angle_idx = angle_index)
                     
-                except Exception as e:
-                    print(e)
+        #         except Exception as e:
+        #             print(e)
 
-        for key in self.input.keyDownList:
+        # for key in self.input.keyDownList:
 
-            pos_idx = MUSIC_CIRCLE_NOTES.index(key)
-            cur_key_cnt = self.abet_trigger_count[pos_idx]
+        #     pos_idx = MUSIC_CIRCLE_NOTES.index(key)
+        #     cur_key_cnt = self.abet_trigger_count[pos_idx]
 
-            is_last_letter_added = len(self.abet_answer_containter) == pos_idx
-            cmb_wrd_idx = len(self.abet_answer_containter)
+        #     is_last_letter_added = len(self.abet_answer_containter) == pos_idx
+        #     cmb_wrd_idx = len(self.abet_answer_containter)
 
-            # on first triggers:
-            if cur_key_cnt == 0:
+        #     # on first triggers:
+        #     if cur_key_cnt == 0:
                 
-                self.abet_trigger_count[pos_idx] = 1
-                x = COMBINED_WORD_X_0 + cmb_wrd_idx * COMBINED_WORD_BLOCK_SPACING
-                y = COMBINED_WORD_Y_0
+        #         self.abet_trigger_count[pos_idx] = 1
+        #         x = COMBINED_WORD_X_0 + cmb_wrd_idx * COMBINED_WORD_BLOCK_SPACING
+        #         y = COMBINED_WORD_Y_0
 
-                mesh = self.perimeter_alphabet_block_generator(pos_idx, x, y, z = 0, scale = 2/5)
+        #         mesh = self.perimeter_alphabet_block_generator(pos_idx, x, y, z = 0, scale = 2/5)
 
-                self.abet_answer_containter.append(mesh)
-                self.scene.add(mesh)
+        #         self.abet_answer_containter.append(mesh)
+        #         self.scene.add(mesh)
 
-            elif cur_key_cnt == 1 and is_last_letter_added:
-                self.abet_trigger_count[pos_idx] = 0
-                removed_letter = self.abet_answer_containter.pop()
-                self.scene.remove(removed_letter)
+        #     elif cur_key_cnt == 1 and is_last_letter_added:
+        #         self.abet_trigger_count[pos_idx] = 0
+        #         removed_letter = self.abet_answer_containter.pop()
+        #         self.scene.remove(removed_letter)
 
         self.renderer.render(self.scene, self.camera)
 

@@ -1,7 +1,11 @@
 ##########################################################
-# TITLE: Parametric Surface Video                        #
+# TITLE: Parametric Surface Efficient Video              #
 # AUTHOR: Nicolas Romano                                 #
-# Date: 7/22/2024                                        # 
+# Date: 7/30/24                                          #
+# Concept:
+# It may be more efficient to not create and destroy
+# mesh objects each time, but rather to keep a set of 7
+# and update their positions and textures each update call
 ##########################################################
 
 ###############################################
@@ -34,11 +38,11 @@ import cv2 as cv
 ################################################
 WIDTH = 1400 / 2
 HEIGHT = 2560 / 2
-Z = 40  # Sets camera distance away from xy plane  Zoom
+Z = 50  # Sets camera distance away from xy plane  Zoom
 X = 10  # MIDDLE
 
 # Tangram Proportions
-TRIANGLE_WH_P = 8.5 / 12
+TRIANGLE_WH_P = 8.5 / 6
 Y0 = 2
 X0 = 5
 
@@ -52,13 +56,6 @@ class GraphicsWindow(Base):
         self.camera.setPosition([X, 0, Z]) 
         self.renderer.render(self.scene, self.camera) 
         self.clips = [cv.VideoCapture('alphabet/bubbles.mp4')]
-        # self.clips = [VideoFileClip(f'media/cartoon_house.mp4'), 
-        #               VideoFileClip(f'media/eyes.mp4'), 
-        #               VideoFileClip(f'media/fire.mp4'), 
-        #               VideoFileClip(f'media/frog.mp4'),
-        #               VideoFileClip(f'media/shark.mp4'),
-        #               VideoFileClip(f'media/nosferatu.mp4')
-        #               ]
         self.house_coords = self.get_house_coordinates(X0, Y0, 15, 0)
         self.raven_coords = self.get_raven_coordinates(X0, Y0, 15, 0)
         
@@ -71,6 +68,7 @@ class GraphicsWindow(Base):
         self.iter = 0
         self.texture_list = []
         self.random_ints = []
+        self.cur_mesh_list = []
 
     def screen_recorder(self, file_name):
         screen = pygame.display.get_surface()
@@ -81,7 +79,6 @@ class GraphicsWindow(Base):
         pygame.image.save(screen_surf, f"media/raven_house/{file_name}.jpg")
 
     def get_cur_video_frame(self, current_time, clip):
-        
         current_frame = clip.get_frame(t = current_time)
         frame_surface = pygame.surfarray.make_surface(current_frame.swapaxes(0, 1))
         return frame_surface
@@ -246,8 +243,6 @@ class GraphicsWindow(Base):
         return transition_coords
 
     def get_tangram_mesh(self, tangram_coords):
-        
-        
         self.texture_list = []
         for vid in self.clips:
             
@@ -276,39 +271,41 @@ class GraphicsWindow(Base):
     # frame updater
     def update(self):
         
-        self.camera.setPosition([X, 0 , Z + 10 * np.sin(self.phi / self.scramble_period * np.pi)]) 
-        
+        # Handles resonant pausing at the symbols
         if self.phi == 0 or self.phi == self.scramble_period:
             if self.pause_iter == self.pause_period:
                 self.pause_iter = 0
                 self.direction = self.direction * -1
                 self.phi += self.direction
-
             else:
                 self.pause_iter += 1
-
         else:
             self.phi += self.direction
 
+        # gets new set of coordinates
         t_coords = self.get_transition_coords(
                                             self.house_coords,
                                             self.raven_coords,
                                             self.phi,
                                             self.scramble_period
                                             )
-        
-        mesh_list = self.get_tangram_mesh(t_coords)
-
-        for mesh in mesh_list:
-            self.scene.add(mesh)
-
+        if self.iter >= 0:
+            self.mesh_list = self.get_tangram_mesh(t_coords)
+            for mesh in self.mesh_list:
+                self.scene.add(mesh)
+        # else:
+        #     vid = self.clips[0]
+        #     frame_surface = self.get_cur_video_frame_cv(self.time, vid)
+        #     grid = Texture(frame_surface)
+        #     grid_material = TextureMaterial(grid)
+        #     for mesh in self.mesh_list:
+        #         print(mesh)
+        #         mesh.set_material(grid_material)
+                
         self.renderer.render(self.scene, self.camera)
-
-        for mesh in mesh_list:
-            self.scene.remove(mesh)
         
         # self.screen_recorder(file_name = self.iter)
-        # self.iter += 1
+        self.iter += 1
 
 
 if __name__ == '__main__':
